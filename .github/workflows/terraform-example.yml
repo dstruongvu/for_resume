@@ -1,0 +1,68 @@
+name: Terraform S3 Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+      - main
+    path:
+      - terraform/example-1/dev
+      - terraform/example-1/prod
+  pull_request:
+    branches:
+      - dev
+      - main
+    path:
+      - terraform/example-1/dev
+      - terraform/example-1/prod
+
+jobs:
+  build:
+    name: Build Terraform
+    runs-on: ubuntu-latest
+
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Determine target environment
+        id: vars
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            echo "folder=prod" >> $GITHUB_OUTPUT
+          else
+            echo "folder=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform/example-1/${{ steps.vars.outputs.folder }}
+
+      - name: Terraform Plan
+        run: terraform plan -var-file="terraform.tfvars"
+        working-directory: terraform/example-1/${{ steps.vars.outputs.folder }}
+
+  deploy:
+    name: Deploy Terraform
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve -var-file="terraform.tfvars"
+        working-directory: terraform/example-1/${{ steps.vars.outputs.folder }}

@@ -13,6 +13,9 @@ on:
     branches:
       - dev
       - main
+    path:
+      - terraform/example-1/dev
+      - terraform/example-1/prod
 
 jobs:
   build:

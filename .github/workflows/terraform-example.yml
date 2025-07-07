@@ -15,8 +15,8 @@ on:
       - main
 
 jobs:
-  terraform:
-    name: Deploy Terraform
+  build:
+    name: Build Terraform
     runs-on: ubuntu-latest
 
     environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
@@ -52,6 +52,13 @@ jobs:
         run: terraform plan -var-file="terraform.tfvars"
         working-directory: terraform/${{ steps.vars.outputs.folder }}
 
+  deploy:
+    name: Deploy Terraform
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve -var-file="terraform.tfvars"

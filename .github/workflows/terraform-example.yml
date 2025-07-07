@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Determine target environment
-        id: var2
+        id: vars
         run: |
           if [[ "${GITHUB_REF##*/}" == "main" ]]; then
             echo "folder=prod" >> $GITHUB_OUTPUT
@@ -75,4 +75,4 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve -var-file="terraform.tfvars"
-        working-directory: terraform/example-1/${{ steps.var2.outputs.folder }}
+        working-directory: terraform/example-1/${{ steps.vars.outputs.folder }}

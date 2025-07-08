@@ -35,7 +35,6 @@ jobs:
       - name: Determine target environment
         id: vars
         run: |
-          echo "GITHUB_BASE_REF: ${GITHUB_BASE_REF}"
           if [[ "${GITHUB_BASE_REF}" == "main" ]]; then
             echo "folder=prod" >> $GITHUB_OUTPUT
             echo "Target environment: prod"
@@ -76,8 +75,7 @@ jobs:
 
       - name: Determine target environment
         id: vars
-        run: |
-          echo "GITHUB_REF_NAME: ${GITHUB_REF_NAME}"
+        run: |          
           if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
             echo "folder=prod" >> $GITHUB_OUTPUT
             echo "Target environment: prod"
